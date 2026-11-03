@@ -1,0 +1,4 @@
+project_id = "YOUR_PROJECT_REF"
+
+[functions.create-note]
+verify_jwt = false # JWT is verified against auth.getUser inside the function
