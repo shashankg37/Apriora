@@ -205,7 +205,7 @@ export default function Home() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fbfcfd]">
+      <div className="min-h-dvh flex items-center justify-center bg-[#fbfcfd]">
         <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
       </div>
     );
@@ -227,16 +227,16 @@ export default function Home() {
   const displayJob = UI_PREVIEW ? (previewData?.job ?? activeJob) : activeJob;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-dvh flex flex-col bg-[#fbfcfd] text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       {UI_PREVIEW && (
-        <div className="w-full bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] font-mono px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
-          <span>
+        <div className="w-full bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] font-mono px-4 sm:px-6 lg:px-8 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
+          <span className="min-w-0">
             UI WALKTHROUGH — sample data, not connected to the backend
           </span>
           <button
             type="button"
             onClick={() => setForceAuth(true)}
-            className="text-amber-700 hover:text-amber-900 hover:underline shrink-0 cursor-pointer"
+            className="text-amber-700 hover:text-amber-900 hover:underline shrink-0 cursor-pointer text-left"
           >
             sign-in screen →
           </button>
@@ -275,25 +275,25 @@ export default function Home() {
 
         {/* TAB: NOTE VIEW */}
         {displayTab === "note-view" && selectedNote && (
-          <div className="py-6">
+          <div className="py-4 sm:py-6">
             <NoteDetail note={selectedNote} onClose={() => setActiveTab("home")} />
           </div>
         )}
 
         {/* TAB: LIBRARY */}
         {displayTab === "library" && (
-          <div className="py-8 space-y-6">
+          <div className="py-6 sm:py-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-              <div>
+              <div className="min-w-0">
                 <span className="font-mono text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
                   YOUR VAULT
                 </span>
-                <h1 className="font-serif text-3xl font-normal text-slate-900 tracking-tight">
+                <h1 className="font-serif text-2xl sm:text-3xl font-normal text-slate-900 tracking-tight">
                   All compiled notes
                 </h1>
               </div>
 
-              <div className="flex items-center gap-2 font-mono text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
+              <div className="flex items-center gap-2 font-mono text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs w-fit">
                 <BookOpen className="w-3.5 h-3.5 text-blue-600" />
                 <span>
                   {displayNotes.length} {displayNotes.length === 1 ? "note" : "notes"} indexed
@@ -319,9 +319,9 @@ export default function Home() {
 /** Shown before the Supabase keys are configured in web/.env.local. */
 function SetupNotice() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-slate-900">
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-8 max-w-md w-full text-center">
+    <div className="min-h-dvh flex flex-col bg-[#fbfcfd] text-slate-900">
+      <div className="flex-1 flex items-center justify-center px-4 py-10 sm:py-16">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-8 max-w-md w-full text-center">
           <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center mx-auto mb-3">
             <Terminal className="w-5 h-5 text-blue-400" />
           </div>

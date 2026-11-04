@@ -43,11 +43,11 @@ export function AuthView({ previewExit }: AuthViewProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbfcfd] text-slate-900">
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
+    <div className="min-h-dvh flex flex-col bg-[#fbfcfd] text-slate-900">
+      <div className="flex-1 flex items-center justify-center px-4 py-10 sm:py-16">
         <div className="w-full max-w-sm">
           {/* Brand */}
-          <div className="flex flex-col items-center text-center mb-8 select-none">
+          <div className="flex flex-col items-center text-center mb-6 sm:mb-8 select-none">
             <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center shadow-sm mb-3">
               <Terminal className="w-5 h-5 text-blue-400" />
             </div>
@@ -60,7 +60,7 @@ export function AuthView({ previewExit }: AuthViewProps) {
           </div>
 
           {/* Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6">
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="block font-mono text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">
@@ -72,7 +72,7 @@ export function AuthView({ previewExit }: AuthViewProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   autoComplete="email"
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  className="w-full px-3.5 py-2.5 text-base sm:text-sm bg-slate-50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 />
               </div>
 
@@ -86,7 +86,7 @@ export function AuthView({ previewExit }: AuthViewProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  className="w-full px-3.5 py-2.5 text-base sm:text-sm bg-slate-50 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 />
               </div>
 

@@ -58,7 +58,7 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
   if (!job) {
     return (
       <div className="pt-10 pb-20 flex items-center justify-center">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-12 text-center max-w-md w-full">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-8 sm:p-12 text-center max-w-md w-full">
           <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
             <Layers className="w-5 h-5 text-slate-400" />
           </div>
@@ -108,7 +108,7 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
     <div className="pt-4 pb-14 space-y-6">
       {/* Top Status & Meta Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 min-w-0">
           <span
             className={`font-mono text-[11px] font-semibold px-2 py-0.5 rounded ${
               failed
@@ -118,14 +118,14 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
           >
             {headerBadge}
           </span>
-          <h1 className="font-serif text-xl sm:text-2xl font-normal text-slate-900 tracking-tight ml-1">
+          <h1 className="font-serif text-xl sm:text-2xl font-normal text-slate-900 tracking-tight ml-1 break-words">
             {job.type === "youtube" ? "YouTube" : "Article"} · {job.depth === "interview" ? "Interview Q&A" : job.depth === "detailed" ? "Detailed" : "Summary"}
           </h1>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 font-mono text-xs text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
-            <Clock className="w-3.5 h-3.5 text-blue-600" />
+            <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span>
               Started <TimeAgo iso={job.created_at} />
             </span>
@@ -134,10 +134,10 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
       </div>
 
       {/* Source Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-        <div className="flex items-center gap-4 min-w-0">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full">
           {/* Type badge */}
-          <div className="w-14 h-14 rounded-xl bg-slate-900 border border-slate-800 shadow-xs flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-900 border border-slate-800 shadow-xs flex items-center justify-center shrink-0">
             {job.type === "youtube" ? (
               <Video className="w-5 h-5 text-blue-400" />
             ) : (
@@ -249,8 +249,8 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
                     </div>
 
                     {/* Step Header */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <span className="font-mono text-xs font-bold text-slate-900">
                           {String(index + 1).padStart(2, "0")}. {step.label}
                         </span>

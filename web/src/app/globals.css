@@ -25,12 +25,39 @@
   }
 }
 
+html {
+  /* Keep iOS from inflating text when the phone is rotated. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Long URLs, hashes and markdown should wrap instead of widening the page. */
+  overflow-wrap: break-word;
+}
+
+/* Comfortable tap targets on touch devices without changing the desktop look. */
+@media (pointer: coarse) {
+  button,
+  a[role="button"],
+  [type="button"],
+  [type="submit"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Hide the scrollbar on horizontal tab strips while keeping them scrollable. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom terminal and monospace font styling */

@@ -53,8 +53,8 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
       {/* Table Section Header */}
-      <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
           <div className="font-mono text-[11px] text-blue-600 font-medium tracking-wider uppercase mb-1">
             LIBRARY / {notes.length} {notes.length === 1 ? "note" : "notes"}
           </div>
@@ -64,7 +64,7 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1 bg-slate-100/70 p-1 rounded-lg border border-slate-200/50 self-start sm:self-center">
+        <div className="flex items-center gap-1 bg-slate-100/70 p-1 rounded-lg border border-slate-200/50 w-full sm:w-auto">
           {([
             { key: "all", label: "All Types" },
             { key: "articles", label: "Articles" },
@@ -73,7 +73,7 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
             <button
               key={pill.key}
               onClick={() => setFilter(pill.key)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+              className={`flex-1 sm:flex-none px-3 py-2 sm:py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                 filter === pill.key
                   ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -86,17 +86,17 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
       </div>
 
       {error ? (
-        <div className="p-10 text-center">
+        <div className="p-8 sm:p-10 text-center">
           <p className="text-sm text-red-600">{error}</p>
           <p className="text-xs text-slate-400 mt-1">Refresh the page to try again.</p>
         </div>
       ) : isLoading ? (
-        <div className="p-10 flex items-center justify-center gap-2 text-xs text-slate-400 font-mono">
+        <div className="p-8 sm:p-10 flex items-center justify-center gap-2 text-xs text-slate-400 font-mono">
           <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
           <span>Loading your notes…</span>
         </div>
       ) : notes.length === 0 ? (
-        <div className="p-12 text-center">
+        <div className="p-8 sm:p-12 text-center">
           <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
             <FileText className="w-5 h-5 text-slate-400" />
           </div>
@@ -107,8 +107,61 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
         </div>
       ) : (
         <>
-          {/* Responsive Table */}
-          <div className="overflow-x-auto">
+          {/* Card list — phones and small tablets */}
+          <ul className="md:hidden divide-y divide-slate-100">
+            {filteredNotes.map((note) => (
+              <li key={note.id}>
+                <div
+                  onClick={() => onSelectNote(note)}
+                  className="p-4 hover:bg-slate-50/80 active:bg-slate-100/80 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-slate-100 text-slate-600 shrink-0 mt-0.5">
+                      {note.sourceType === "youtube" ? (
+                        <Video className="w-4 h-4" />
+                      ) : (
+                        <FileText className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-slate-900 text-sm leading-snug line-clamp-2">
+                        {note.title}
+                      </h3>
+                      <p className="font-mono text-[11px] text-slate-400 mt-1 line-clamp-1 break-all">
+                        {note.sourceUrl || note.model}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono border font-medium capitalize shrink-0 ${getDepthBadge(
+                          note.depth
+                        )}`}
+                      >
+                        {note.depth === "interview" ? "Interview Q&A" : note.depth}
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-500 truncate">
+                        <TimeAgo iso={note.createdAt} />
+                      </span>
+                    </div>
+
+                    <NoteActions
+                      note={note}
+                      copied={copiedId === note.id}
+                      onCopy={handleCopy}
+                      onOpen={onSelectNote}
+                      className="shrink-0"
+                    />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Table — md and up */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60 font-mono text-[10px] text-slate-400 uppercase tracking-wider">
@@ -164,43 +217,13 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
 
                     {/* Actions */}
                     <td className="py-4 px-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          title="View note"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectNote(note);
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          title="Copy Markdown"
-                          onClick={(e) => handleCopy(e, note)}
-                          className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
-                        >
-                          {copiedId === note.id ? (
-                            <Check className="w-4 h-4 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                        {note.sourceUrl && (
-                          <a
-                            href={note.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Open Source Link"
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
+                      <NoteActions
+                        note={note}
+                        copied={copiedId === note.id}
+                        onCopy={handleCopy}
+                        onOpen={onSelectNote}
+                        className="justify-end"
+                      />
                     </td>
                   </tr>
                 ))}
@@ -213,6 +236,56 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
             Showing {filteredNotes.length} of {notes.length} {notes.length === 1 ? "note" : "notes"}
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+interface NoteActionsProps {
+  note: Note;
+  copied: boolean;
+  onCopy: (e: React.MouseEvent, note: Note) => void;
+  onOpen: (note: Note) => void;
+  className?: string;
+}
+
+/** Row of per-note actions, shared by the mobile cards and the desktop table. */
+function NoteActions({ note, copied, onCopy, onOpen, className = "" }: NoteActionsProps) {
+  return (
+    <div className={`flex items-center gap-1 ${className}`}>
+      <button
+        type="button"
+        title="View note"
+        aria-label="View note"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpen(note);
+        }}
+        className="p-2 md:p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        title="Copy Markdown"
+        aria-label="Copy Markdown"
+        onClick={(e) => onCopy(e, note)}
+        className="p-2 md:p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
+      >
+        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+      </button>
+      {note.sourceUrl && (
+        <a
+          href={note.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open Source Link"
+          aria-label="Open source link"
+          onClick={(e) => e.stopPropagation()}
+          className="p-2 md:p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </a>
       )}
     </div>
   );

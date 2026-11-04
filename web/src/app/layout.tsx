@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Apriora — Compile interview-ready notes from any resource",
   description: "Compile interview-ready notes, mathematical derivations, code blocks, and technical Q&A from any resource.",
+};
+
+/** Light-only app: tint the mobile browser chrome to match the page background. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "light",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
