@@ -12,7 +12,8 @@ import { AuthView } from "@/components/AuthView";
 import { createNoteJob, fetchActiveJob, fetchNotes, signOut } from "@/lib/api";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { buildPreviewData, UI_PREVIEW } from "@/lib/uiPreview";
-import { DepthMode, Job, Note } from "@/types";
+import { SourceInput } from "@/components/HeroIngestion";
+import { Job, Note } from "@/types";
 
 type MainTab = "home" | "processing" | "note-view" | "library";
 
@@ -160,7 +161,7 @@ export default function Home() {
   }, [signedIn, jobId, jobStatus]);
 
   /* ------------------------------ actions ------------------------------ */
-  const handleGenerate = useCallback(async (url: string, depth: DepthMode) => {
+  const handleGenerate = useCallback(async (input: SourceInput) => {
     if (UI_PREVIEW) {
       if (previewData) setActiveJob(previewData.job);
       setActiveTab("processing");
@@ -169,7 +170,7 @@ export default function Home() {
     setIsGenerating(true);
     setGenerateError(null);
     try {
-      await createNoteJob(url, depth);
+      await createNoteJob(input);
       const job = await fetchActiveJob();
       if (job) setActiveJob(job);
       setRefreshKey((k) => k + 1);

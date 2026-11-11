@@ -1,12 +1,15 @@
 export type DepthMode = "summary" | "detailed" | "interview";
 
+export type AgentMode = "essential_notes" | "interview_qa";
+
 export type JobStatus = "queued" | "processing" | "completed" | "failed";
 
 export interface Job {
   id: string;
   owner_id?: string;
   url: string;
-  type: "youtube" | "article";
+  type: "youtube" | "article" | "transcript";
+  title?: string;
   depth: DepthMode;
   status: JobStatus;
   stage: string;
@@ -26,7 +29,7 @@ export interface Note {
   source_id: string;
   title: string;
   sourceUrl: string;
-  sourceType: "youtube" | "article";
+  sourceType: "youtube" | "article" | "transcript";
   depth: DepthMode;
   markdown: string;
   essential_notes?: string;

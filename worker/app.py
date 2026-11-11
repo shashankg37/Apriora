@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 
-from pipeline.graph import build_graph
+from pipeline.graph import ALL_AGENTS, build_graph
 from pipeline.state import GraphState
 from services.supabase_client import SupabaseClient
 from services.vector_store import TranscriptVectorStore
@@ -17,10 +17,12 @@ pipeline = build_graph(supabase)
 
 
 async def run_job(job_id: str, job: dict) -> None:
-    state: GraphState = {"job_id": job_id, "owner_id": job["owner_id"], "url": job["url"], "source_type": job["type"], "depth": job["depth"]}
+    state: GraphState = {"job_id": job_id, "owner_id": job["owner_id"], "url": job["url"], "source_type": job["type"], "depth": job["depth"], "agents": list(job.get("agents") or ALL_AGENTS)}
+    if job.get("transcript"): state["custom_transcript"] = job["transcript"]  # user-pasted transcript acquisition path
+    if job.get("title"): state["title"] = job["title"]
     try:
-        supabase.update_stage(job_id, "transcribing resource", 15)
-        state["transcript"] = await transcribe_resource(state["url"], state["source_type"])
+        supabase.update_stage(job_id, "acquiring transcript" if state.get("custom_transcript") else "transcribing resource", 15)
+        state["transcript"] = await transcribe_resource(state["url"], state["source_type"], state.get("custom_transcript"), state.get("title"))
         supabase.update_stage(job_id, "transcript ready", 30)
         result = await pipeline.ainvoke(state)
         supabase.save_result(result)

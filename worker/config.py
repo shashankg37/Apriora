@@ -1,5 +1,11 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Worker runs from start commands like `python app.py` with the env dir relative to itself.
+load_dotenv(Path(__file__).resolve().with_name(".env"))
 
 
 @dataclass(frozen=True)

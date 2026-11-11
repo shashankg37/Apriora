@@ -1,11 +1,22 @@
-"""Standalone LangChain pipeline: resource URL -> complete transcript resource."""
+"""Standalone LangChain pipeline: resource URL -> complete transcript resource.
+
+YouTube transcript language waterfall:
+  1. English captions exist -> fetch them directly (unchanged common path).
+  2. Captions YouTube can translate -> request the "en" translation server-side; YouTube
+     returns English text directly, costing no LLM tokens.
+  3. Captions only in another language (e.g. Hindi) -> fetch the native transcript and
+     translate it segment-by-segment with the shared Groq model (transcription/translate.py).
+No audio download: caption-less videos fail fast with a clear message instead.
+"""
 import asyncio
 from urllib.parse import parse_qs, urlparse
 
 import trafilatura
 from langchain_core.runnables import RunnableLambda
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import TranscriptsDisabled, VideoUnavailable
 
+from transcription.translate import translate_to_english
 from transcription.state import TranscriptResource, TranscriptSegment
 
 def _youtube_id(url: str) -> str:
@@ -14,12 +25,72 @@ def _youtube_id(url: str) -> str:
     if not video_id: raise ValueError("Could not identify a YouTube video ID")
     return video_id
 
+_MAX_PASTED_SEGMENT = 4_000  # matches the ~chunk scale; keeps chunk boundaries balanced
+
+def _paste_segments(text: str) -> list[dict]:
+    """Paragraph-first segmentation for user-pasted transcripts; oversized lines are hard-wrapped."""
+    segments = []
+    for line in (raw.strip() for raw in text.splitlines()):
+        if not line: continue
+        for index in range(0, len(line), _MAX_PASTED_SEGMENT):
+            part = line[index:index + _MAX_PASTED_SEGMENT].strip()
+            if part: segments.append({"text": part, "start": 0.0, "duration": 0.0})
+    return segments
+
+def _segments(fetched) -> list[dict]:
+    return [{"text": row.text, "start": row.start, "duration": row.duration} for row in fetched]
+
+def _native_candidate(listing):
+    """First usable non-English caption track, preferring Hindi and human-made captions."""
+    candidates = [transcript for transcript in listing if transcript.language_code.split("-")[0] != "en"]
+    if not candidates: return None
+    return sorted(candidates, key=lambda t: (t.language_code.split("-")[0] != "hi", t.is_generated))[0]
+
+def _english_candidate(listing):
+    """First English caption track, including regional variants (en-US, en-GB) that
+    find_transcript's exact-code match would miss; manual wording beats generated wording."""
+    candidates = [transcript for transcript in listing if transcript.language_code.split("-")[0] == "en"]
+    if not candidates: return None
+    return sorted(candidates, key=lambda t: t.is_generated)[0]
+
+async def _fetch_youtube(url: str, video_id: str) -> list[dict]:
+    try:
+        listing = await asyncio.to_thread(YouTubeTranscriptApi().list, video_id)
+    except TranscriptsDisabled as exc:
+        raise ValueError("This video has no captions at all, so there is nothing to transcribe") from exc
+    except VideoUnavailable as exc:
+        raise ValueError("That YouTube video is unavailable") from exc
+
+    english = _english_candidate(listing)  # tier 1: English captions (incl. en-US/en-GB), the common path
+    if english is not None:
+        return _segments(await asyncio.to_thread(english.fetch))
+
+    for transcript in listing:  # tier 2: free server-side translation of any translatable track
+        if transcript.is_translatable and transcript.language_code.split("-")[0] != "en":
+            try:
+                return _segments(await asyncio.to_thread(transcript.translate("en").fetch))
+            except Exception:  # listing flags can oversell translation (seen live: TranslationLanguageNotAvailable); fall to tier 3
+                pass
+
+    transcript = _native_candidate(listing)  # tier 3: translate the native text with the shared LLM
+    if transcript is None:
+        raise ValueError("This video has no English captions and no caption track we could translate")
+    segments = _segments(await asyncio.to_thread(transcript.fetch))
+    english = await translate_to_english([segment["text"] for segment in segments], transcript.language)
+    return [{**segment, "text": text} for segment, text in zip(segments, english)]
+
 async def _fetch_resource(input: dict) -> dict:
     url, source_type = input["url"], input["source_type"]
+    if source_type == "transcript":
+        pasted = (input.get("custom_transcript") or "").strip()
+        if not pasted: raise ValueError("This job had no pasted transcript to process")
+        segments = _paste_segments(pasted)
+        if not segments: raise ValueError("The pasted transcript was empty")
+        return {"url": url, "source_type": source_type, "title": input.get("title") or "Pasted transcript", "segments": segments}
     if source_type == "youtube":
         video_id = _youtube_id(url)
-        fetched = await asyncio.to_thread(YouTubeTranscriptApi().fetch, video_id)
-        return {"url": url, "source_type": source_type, "title": f"YouTube video {video_id}", "segments": [{"text": row.text, "start": row.start, "duration": row.duration} for row in fetched]}
+        segments = await _fetch_youtube(url, video_id)
+        return {"url": url, "source_type": source_type, "title": f"YouTube video {video_id}", "segments": segments}
     page = await asyncio.to_thread(trafilatura.fetch_url, url)
     text = trafilatura.extract(page or "", include_comments=False, include_tables=True)
     if not text: raise ValueError("We could not extract readable article text from that page")
@@ -34,5 +105,5 @@ def _assemble_context(raw: dict) -> TranscriptResource:
 # Kept independent of LangGraph so it can be called/tested as the resource pipeline.
 resource_to_transcript = RunnableLambda(_fetch_resource) | RunnableLambda(_assemble_context)
 
-async def transcribe_resource(url: str, source_type: str) -> TranscriptResource:
-    return await resource_to_transcript.ainvoke({"url": url, "source_type": source_type})
+async def transcribe_resource(url: str, source_type: str, custom_transcript: str | None = None, title: str | None = None) -> TranscriptResource:
+    return await resource_to_transcript.ainvoke({"url": url, "source_type": source_type, "custom_transcript": custom_transcript, "title": title})

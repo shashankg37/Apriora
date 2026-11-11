@@ -119,7 +119,7 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
             {headerBadge}
           </span>
           <h1 className="font-serif text-xl sm:text-2xl font-normal text-slate-900 tracking-tight ml-1 break-words">
-            {job.type === "youtube" ? "YouTube" : "Article"} · {job.depth === "interview" ? "Interview Q&A" : job.depth === "detailed" ? "Detailed" : "Summary"}
+            {job.type === "transcript" ? "Pasted transcript" : job.type === "youtube" ? "YouTube" : "Article"} · {job.depth === "interview" ? "Interview Q&A" : job.depth === "detailed" ? "Detailed" : "Summary"}
           </h1>
         </div>
 
@@ -148,17 +148,19 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
           <div className="min-w-0">
             <div className="font-mono text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-2">
               <span>SOURCE RESOURCE</span>
-              <a
-                href={job.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-600 hover:underline flex items-center gap-0.5"
-              >
-                Open link <ExternalLink className="w-3 h-3" />
-              </a>
+              {job.url && (
+                <a
+                  href={job.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline flex items-center gap-0.5"
+                >
+                  Open link <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
             <h3 className="font-semibold text-sm sm:text-base text-slate-900 line-clamp-1 break-all">
-              {job.url}
+              {job.title || job.url || "Pasted transcript"}
             </h3>
           </div>
         </div>
@@ -268,7 +270,9 @@ export function ProcessingView({ job, onBackHome }: ProcessingViewProps) {
                     </div>
 
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      {step.description}
+                      {index === 0 && job.type === "transcript"
+                        ? "Use the user-pasted transcript supplied with the job row."
+                        : step.description}
                     </p>
                   </div>
                 );

@@ -46,7 +46,9 @@ export function NoteDetail({ note, onClose }: NoteDetailProps) {
     { key: "essential", label: "Essential Notes", shortLabel: "Essentials", icon: <BookOpen className="w-3.5 h-3.5" />, content: note.essential_notes },
     { key: "qa", label: "Interview Q&A", shortLabel: "Q&A", icon: <HelpCircle className="w-3.5 h-3.5" />, content: note.interview_qa },
   ];
-  const activeTabDef = tabs.find((t) => t.key === activeTab)!;
+  // Sections an agent was never selected for stay hidden; the Full Note tab always exists.
+  const visibleTabs = tabs.filter((tab) => tab.key === "all" || tab.content?.trim());
+  const activeTabDef = visibleTabs.find((t) => t.key === activeTab) ?? visibleTabs[0];
 
   let host = note.sourceUrl;
   try {
@@ -71,7 +73,7 @@ export function NoteDetail({ note, onClose }: NoteDetailProps) {
             </span>
             <span className="text-slate-300">·</span>
             <span className="font-mono text-[10px] text-slate-500 capitalize">
-              {note.sourceType === "youtube" ? "YouTube" : "Article"}
+              {note.sourceType === "youtube" ? "YouTube" : note.sourceType === "transcript" ? "Pasted transcript" : "Article"}
             </span>
           </div>
 
@@ -128,7 +130,7 @@ export function NoteDetail({ note, onClose }: NoteDetailProps) {
 
       {/* Tab Navigation */}
       <div className="px-4 sm:px-6 border-b border-slate-200 bg-white flex items-center gap-2 sm:gap-4 text-xs font-medium overflow-x-auto no-scrollbar">
-        {tabs.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}

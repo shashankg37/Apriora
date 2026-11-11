@@ -8,7 +8,7 @@ class TranscriptSegment(BaseModel):
 
 class TranscriptResource(BaseModel):
     url: str
-    source_type: Literal["youtube", "article"]
+    source_type: Literal["youtube", "article", "transcript"]
     title: str
     segments: list[TranscriptSegment] = Field(default_factory=list)
     full_text: str

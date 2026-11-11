@@ -1,4 +1,4 @@
-# IntervNotes backend MVP
+# IntervNotes
 
 `Supabase Edge Function → pgmq queue → FastAPI pipeline worker → LangChain transcription → LangGraph agents → Supabase Postgres`
 
@@ -12,16 +12,13 @@ The backend generates source-grounded interview notes from YouTube and article U
 - `worker/services/vector_store.py`: per-job chunk index in ChromaDB (ephemeral, in-memory).
 - `worker/agents/`: Essential Notes and Interview Q&A agents.
 - `worker/pipeline/`: LangGraph fan-out/fan-in orchestration for the two agents.
-- `worker/cli.py`: runs a one-off job without the queue.
-- `demo/`: local Streamlit harness for testing the actual transcript pipeline and agents without Supabase.
-- `docs/`: `PRD.md` (product decisions) and `PROJECT_GUIDE.md` — **start here** if you're new; a detailed file-by-file walkthrough of the project with a recommended reading order.
-- `web/`: intentionally deferred; no frontend is implemented.
+- `web/`: Next.js app — Supabase auth, note ingestion (URL or pasted transcript), live job status, and notes display.
 
 ## Configure and run
 
-1. Create a Supabase project; run the migration in `supabase/migrations/0001_init.sql` (enables pgmq, creates tables, RLS policies, and the `note-jobs` queue).
-2. Deploy the Edge Function from `supabase/functions/` with `supabase functions deploy` and `supabase secrets set` from `supabase/.env.example` values.
-3. Copy `worker/.env.example` to `worker/.env`; set `GROQ_API_KEY`, `SUPABASE_URL`, and the service role `SUPABASE_SERVICE_ROLE_KEY`. Worker hosting is an open decision; any Python host able to reach the Supabase REST endpoint works.
+1. Create a Supabase project; run the migrations in `supabase/migrations/` in order (pgmq, tables, RLS policies, the `note-jobs` queue, per-job agent selection).
+2. Deploy the Edge Function from `supabase/functions/` with `supabase functions deploy create-note`; set its secrets with `supabase secrets set`.
+3. Create `worker/.env` with `GROQ_API_KEY`, `SUPABASE_URL`, and the service role `SUPABASE_SERVICE_ROLE_KEY`.
 
 ```powershell
 python -m pip install -r worker/requirements.txt
@@ -30,4 +27,10 @@ cd worker; uvicorn app:app --reload
 
 Clients create notes through the `create-note` Edge Function (answers `{jobId}`) and follow `jobs.status`/`notes` rows directly via Supabase reads.
 
-The worker polls the queue on startup; `worker/cli.py <url>` runs a one-off job without the queue, and `POST /process` is a manual one-shot trigger for local testing.
+The worker polls the queue on startup; `POST /process` is a manual one-shot trigger for local testing.
+
+## Deployment
+
+- `web/` → Vercel: connect the repo, set the root directory to `web/`, and provide the public Supabase env vars.
+- `worker/` → Railway: root directory `worker/`, start command `uvicorn app:app --host 0.0.0.0 --port $PORT`, health check `/healthz`; the queue poller starts with the app lifespan, so a single always-on service suffices.
+- `supabase/functions/` → Supabase CLI (`supabase functions deploy create-note`), separate from the GitHub push.

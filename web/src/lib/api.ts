@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { DepthMode, Job, Note } from "@/types";
+import { AgentMode, DepthMode, Job, Note } from "@/types";
 
 /* ------------------------------------------------------------------ */
 /* Auth                                                                */
@@ -75,7 +75,8 @@ function mapNote(row: NoteRow): Note {
     source_id: row.source_id,
     title: src.title || host || "Untitled note",
     sourceUrl: url,
-    sourceType: src.type === "article" ? "article" : "youtube",
+    sourceType:
+      src.type === "youtube" ? "youtube" : src.type === "transcript" ? "transcript" : "article",
     depth: (row.depth as DepthMode) ?? "detailed",
     markdown: row.markdown ?? "",
     essential_notes: typeof row.essential_notes === "string" ? row.essential_notes : undefined,
@@ -106,7 +107,7 @@ export async function fetchNotes(): Promise<Note[]> {
 /* ------------------------------------------------------------------ */
 
 const JOB_COLUMNS =
-  "id, url, type, depth, status, stage, progress, note_id, error, created_at, updated_at";
+  "id, url, title, type, depth, status, stage, progress, note_id, error, created_at, updated_at";
 
 /** Latest job of any status, so the UI can distinguish "done" from "nothing running". */
 export async function fetchActiveJob(): Promise<Job | null> {
@@ -133,10 +134,27 @@ async function readFunctionError(error: unknown): Promise<string> {
   return message || "Could not create the job.";
 }
 
-export async function createNoteJob(url: string, depth: DepthMode): Promise<void> {
-  const { error } = await supabase.functions.invoke("create-note", {
-    body: { url, depth },
-  });
+export interface CreateNoteJobInput {
+  url: string;
+  depth: DepthMode;
+  agents: AgentMode[];
+  transcript?: string;
+  title?: string;
+}
+
+/** Either a fetchable URL (youtube/article) or a user-pasted transcript; the Edge Function validates both shapes. */
+export async function createNoteJob({
+  url,
+  depth,
+  agents,
+  transcript,
+  title,
+}: CreateNoteJobInput): Promise<void> {
+  const pasted = transcript?.trim();
+  const body = pasted
+    ? { transcript: pasted, depth, agents, ...(title?.trim() ? { title: title.trim() } : {}) }
+    : { url, depth, agents };
+  const { error } = await supabase.functions.invoke("create-note", { body });
   if (error) throw new Error(await readFunctionError(error));
 }
 
@@ -163,14 +181,16 @@ export function formatDate(iso: string): string {
   });
 }
 
-/** Locale-stable, prerender-safe date label (absolute, no dependency on Date.now()). */
+/**
+ * Locale-stable, prerender-safe date label — never reads the current clock, so
+ * it's identical on the server and the client during hydration.
+ */
 export function stableDateLabel(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
-  const thisYear = date.getFullYear() === new Date().getFullYear();
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    ...(thisYear ? {} : { year: "numeric" }),
+    year: "numeric",
   });
 }

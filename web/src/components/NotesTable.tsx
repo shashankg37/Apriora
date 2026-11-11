@@ -21,12 +21,13 @@ interface NotesTableProps {
 }
 
 export function NotesTable({ notes, onSelectNote, isLoading = false, error }: NotesTableProps) {
-  const [filter, setFilter] = useState<"all" | "articles" | "lectures">("all");
+  const [filter, setFilter] = useState<"all" | "articles" | "lectures" | "transcripts">("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filteredNotes = notes.filter((note) => {
     if (filter === "articles") return note.sourceType === "article";
     if (filter === "lectures") return note.sourceType === "youtube";
+    if (filter === "transcripts") return note.sourceType === "transcript";
     return true;
   });
 
@@ -69,6 +70,7 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
             { key: "all", label: "All Types" },
             { key: "articles", label: "Articles" },
             { key: "lectures", label: "Lectures" },
+            { key: "transcripts", label: "Transcripts" },
           ] as const).map((pill) => (
             <button
               key={pill.key}
@@ -128,7 +130,7 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
                         {note.title}
                       </h3>
                       <p className="font-mono text-[11px] text-slate-400 mt-1 line-clamp-1 break-all">
-                        {note.sourceUrl || note.model}
+                        {note.sourceUrl || (note.sourceType === "transcript" ? "pasted transcript" : note.model)}
                       </p>
                     </div>
                   </div>
@@ -193,7 +195,7 @@ export function NotesTable({ notes, onSelectNote, isLoading = false, error }: No
                             {note.title}
                           </div>
                           <div className="font-mono text-[11px] text-slate-400 mt-0.5 line-clamp-1">
-                            {note.sourceUrl || note.model}
+                            {note.sourceUrl || (note.sourceType === "transcript" ? "pasted transcript" : note.model)}
                           </div>
                         </div>
                       </div>
